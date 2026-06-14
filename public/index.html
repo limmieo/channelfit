@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ChannelFit — YouTube Creator Vetting Tool</title>
+<meta name="description" content="ChannelFit is a free YouTube creator vetting tool for brands and agencies. Paste a channel URL and get a public-data report on audience size, posting frequency, engagement, recent performance, top videos, content themes, and deal readiness."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #07070f;
+    --card: rgba(255,255,255,0.04);
+    --card-border: rgba(255,255,255,0.08);
+    --card-hover: rgba(255,255,255,0.07);
+    --accent: #6ee7f7;
+    --accent2: #a78bfa;
+    --green: #4ade80;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --glow: rgba(110,231,247,0.15);
+  }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated gradient background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 20%, rgba(110,231,247,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(167,139,250,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 50% 50%, rgba(74,222,128,0.03) 0%, transparent 60%);
+    animation: bgPulse 8s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes bgPulse {
+    0% { opacity: 0.6; transform: scale(1); }
+    100% { opacity: 1; transform: scale(1.05); }
+  }
+
+  /* Floating particles */
+  #particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0;
+    animation: float linear infinite;
+  }
+  @keyframes float {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 0.5; }
+    100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+  }
+
+  .container { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+  /* Hero */
+  .hero {
+    text-align: center;
+    padding: 80px 0 60px;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(110,231,247,0.1);
+    border: 1px solid rgba(110,231,247,0.3);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 30%, var(--accent) 70%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero p {
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    max-width: 560px;
+    margin: 0 auto 40px;
+  }
+
+  /* Search */
+  .search-wrap {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .search-wrap input {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(110,231,247,0.3);
+    border-radius: 16px;
+    padding: 18px 140px 18px 24px;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text);
+    outline: none;
+    transition: all 0.3s;
+    box-shadow: 0 0 0 0 rgba(110,231,247,0);
+  }
+  .search-wrap input::placeholder { color: var(--muted); }
+  .search-wrap input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 30px rgba(110,231,247,0.15), inset 0 0 20px rgba(110,231,247,0.03);
+  }
+  .search-wrap button {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 10px;
+    padding: 10px 22px;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #07070f;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .search-wrap button:hover { transform: translateY(-50%) scale(1.04); box-shadow: 0 0 20px rgba(110,231,247,0.3); }
+  .search-wrap button:disabled { opacity: 0.5; cursor: not-allowed; transform: translateY(-50%); }
+
+  .examples { margin-top: 14px; color: var(--muted); font-size: 0.78rem; }
+  .examples span { color: var(--accent); opacity: 0.7; }
+
+  /* Loading */
+  #loading { display: none; text-align: center; padding: 60px 0; }
+  .spinner {
+    width: 48px; height: 48px;
+    border: 3px solid rgba(110,231,247,0.1);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 20px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading p { color: var(--muted); font-size: 0.9rem; }
+
+  /* Error */
+  #error-box {
+    display: none;
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.3);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    color: var(--red);
+    font-size: 0.9rem;
+  }
+
+  /* Results */
+  #results { display: none; animation: fadeUp 0.5s ease; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Channel header */
+  .channel-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 12px;
+    backdrop-filter: blur(10px);
+  }
+  .channel-avatar {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(110,231,247,0.3);
+  }
+  .channel-info h2 { font-size: 1.3rem; font-weight: 700; }
+  .channel-info p { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+  .channel-info .handle { color: var(--accent); font-size: 0.85rem; }
+
+  /* Portfolio pitch strip */
+  .pitch-strip {
+    background: linear-gradient(135deg, rgba(110,231,247,0.06), rgba(167,139,250,0.06));
+    border: 1px solid rgba(110,231,247,0.15);
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .pitch-strip strong { color: var(--accent); }
+
+  /* Stat grid */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    transition: all 0.25s;
+    cursor: default;
+  }
+  .stat-card:hover {
+    background: var(--card-hover);
+    border-color: rgba(110,231,247,0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 20px rgba(110,231,247,0.05);
+  }
+  .stat-label { font-size: 0.72rem; color: var(--muted); font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; }
+  .stat-value { font-size: 1.6rem; font-weight: 700; color: var(--text); }
+  .stat-value.accent { color: var(--accent); }
+  .stat-sub { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+  /* Momentum & Score row */
+  .momentum-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  @media(max-width: 560px) { .momentum-row { grid-template-columns: 1fr; } }
+
+  .momentum-card, .score-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 22px;
+    backdrop-filter: blur(10px);
+    transition: all 0.25s;
+  }
+  .momentum-card:hover, .score-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  }
+  .section-label { font-size: 0.72rem; color: var(--muted); font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px; }
+
+  .momentum-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 100px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .momentum-badge.rising { background: rgba(74,222,128,0.12); color: var(--green); border: 1px solid rgba(74,222,128,0.3); }
+  .momentum-badge.flat { background: rgba(251,191,36,0.12); color: var(--yellow); border: 1px solid rgba(251,191,36,0.3); }
+  .momentum-badge.declining { background: rgba(248,113,113,0.12); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+  .momentum-detail { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+  /* Fit Score gauge */
+  .score-gauge-wrap { display: flex; align-items: center; gap: 20px; }
+  .score-circle {
+    flex-shrink: 0;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    position: relative;
+  }
+  .score-circle::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: conic-gradient(var(--accent-color) var(--pct), rgba(255,255,255,0.05) var(--pct));
+    z-index: -1;
+  }
+  .score-circle.inner { background: var(--bg); }
+  .score-details { flex: 1; }
+  .score-details p { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+  /* Topics */
+  .topics-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .topic-tag {
+    background: rgba(167,139,250,0.1);
+    border: 1px solid rgba(167,139,250,0.2);
+    color: var(--accent2);
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    border-radius: 100px;
+  }
+
+  /* Top videos */
+  .videos-section { margin-bottom: 12px; }
+  .section-title { font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--card-border); }
+  .video-card {
+    display: flex;
+    gap: 14px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 8px;
+    backdrop-filter: blur(10px);
+    transition: all 0.25s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .video-card:hover {
+    background: var(--card-hover);
+    border-color: rgba(110,231,247,0.15);
+    transform: translateX(4px);
+  }
+  .video-thumb { width: 100px; height: 56px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+  .video-info { flex: 1; min-width: 0; }
+  .video-title { font-size: 0.85rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px; }
+  .video-meta { display: flex; gap: 12px; flex-wrap: wrap; }
+  .video-meta span { font-size: 0.75rem; color: var(--muted); }
+  .video-meta .views { color: var(--accent); font-weight: 600; }
+  .video-rank { font-size: 1.1rem; font-weight: 700; color: var(--muted); flex-shrink: 0; display: flex; align-items: center; padding-right: 4px; }
+
+  /* Trend chart */
+  .chart-section {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(10px);
+  }
+  .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 80px; margin-top: 14px; }
+  .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .chart-bar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    transition: height 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+    min-height: 4px;
+  }
+  .chart-bar.recent { background: linear-gradient(to top, var(--accent), rgba(110,231,247,0.4)); }
+  .chart-bar.older { background: linear-gradient(to top, var(--accent2), rgba(167,139,250,0.3)); }
+  .chart-label { font-size: 0.6rem; color: var(--muted); text-align: center; white-space: nowrap; overflow: hidden; max-width: 100%; }
+
+  .footer-note {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.75rem;
+    padding: 20px 0 40px;
+    line-height: 1.8;
+  }
+  .footer-note a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div id="particles"></div>
+
+<div class="container">
+  <div class="hero">
+    <div class="hero-badge">Free Creator Vetting Tool</div>
+    <h1>ChannelFit</h1>
+    <p>Paste any YouTube channel URL and get an instant audit — audience size, engagement, momentum, top content, and a Creator Fit Score. Built for brands and agencies.</p>
+
+    <div class="search-wrap">
+      <input type="text" id="channelInput" placeholder="@mkbhd or youtube.com/@channel" autocomplete="off"/>
+      <button id="searchBtn" onclick="audit()">Audit →</button>
+    </div>
+    <div class="examples">Try: <span>@mkbhd</span> · <span>@mrbeast</span> · <span>youtube.com/@veritasium</span></div>
+  </div>
+
+  <div id="error-box"></div>
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Fetching channel data…</p>
+  </div>
+
+  <div id="results"></div>
+
+  <div class="footer-note">
+    ChannelFit uses YouTube's public Data API. No account needed. All data is public.<br/>
+    Built by <a href="https://tonydestin.com" target="_blank">Tony Destin</a> · Performance marketer &amp; automation builder
+  </div>
+</div>
+
+<script>
+// Particles
+(function() {
+  const container = document.getElementById('particles');
+  const colors = ['#6ee7f7','#a78bfa','#4ade80','#fff'];
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 4 + 1;
+    p.style.cssText = `
+      width:${size}px;height:${size}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      left:${Math.random()*100}%;
+      animation-duration:${Math.random()*15+10}s;
+      animation-delay:${Math.random()*10}s;
+    `;
+    container.appendChild(p);
+  }
+})();
+
+function fmt(n) {
+  n = parseInt(n) || 0;
+  if (n >= 1e9) return (n/1e9).toFixed(1)+'B';
+  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+  return n.toLocaleString();
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+
+function animateCount(el, target, isFloat) {
+  let start = 0;
+  const duration = 1200;
+  const step = timestamp => {
+    if (!start) start = timestamp;
+    const progress = Math.min((timestamp - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    const val = isFloat ? (ease * target).toFixed(2) : Math.floor(ease * target);
+    el.textContent = isFloat ? val + '%' : fmt(val);
+    if (progress < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function scoreColor(s) {
+  if (s >= 75) return '#4ade80';
+  if (s >= 50) return '#fbbf24';
+  return '#f87171';
+}
+
+function scoreLabel(s) {
+  if (s >= 80) return 'Strong Fit';
+  if (s >= 65) return 'Good Fit';
+  if (s >= 50) return 'Moderate Fit';
+  if (s >= 35) return 'Weak Fit';
+  return 'Poor Fit';
+}
+
+async function audit() {
+  const input = document.getElementById('channelInput').value.trim();
+  if (!input) return;
+
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('searchBtn').disabled = true;
+
+  try {
+    // 1. Fetch channel
+    const chRes = await fetch(`/api/channel?handle=${encodeURIComponent(input)}`);
+    if (!chRes.ok) {
+      const err = await chRes.json();
+      throw new Error(err.error || 'Channel not found');
+    }
+    const channel = await chRes.json();
+    const stats = channel.statistics || {};
+    const snippet = channel.snippet || {};
+    const uploadsId = channel.contentDetails?.relatedPlaylists?.uploads;
+
+    // 2. Fetch recent videos (up to 50)
+    let videos = [];
+    if (uploadsId) {
+      const vRes = await fetch(`/api/videos?playlistId=${uploadsId}&maxResults=50`);
+      const vData = await vRes.json();
+      const ids = (vData.items || []).map(i => i.contentDetails?.videoId).filter(Boolean);
+
+      if (ids.length) {
+        const sRes = await fetch(`/api/video-stats?ids=${ids.join(',')}`);
+        const sData = await sRes.json();
+        videos = (sData.items || []).map(v => ({
+          id: v.id,
+          title: v.snippet?.title || '',
+          thumb: v.snippet?.thumbnails?.medium?.url || v.snippet?.thumbnails?.default?.url || '',
+          views: parseInt(v.statistics?.viewCount) || 0,
+          likes: parseInt(v.statistics?.likeCount) || 0,
+          comments: parseInt(v.statistics?.commentCount) || 0,
+          published: v.snippet?.publishedAt || '',
+          tags: v.snippet?.tags || [],
+          url: `https://youtube.com/watch?v=${v.id}`
+        }));
+      }
+    }
+
+    document.getElementById('loading').style.display = 'none';
+    render(channel, stats, snippet, videos);
+
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('searchBtn').disabled = false;
+    const eb = document.getElementById('error-box');
+    eb.textContent = '⚠ ' + err.message;
+    eb.style.display = 'block';
+  }
+}
+
+function render(channel, stats, snippet, videos) {
+  document.getElementById('searchBtn').disabled = false;
+
+  const subs = parseInt(stats.subscriberCount) || 0;
+  const totalViews = parseInt(stats.viewCount) || 0;
+  const totalVideos = parseInt(stats.videoCount) || 0;
+  const created = snippet.publishedAt ? new Date(snippet.publishedAt) : null;
+  const ageMonths = created ? Math.max(1, Math.round((Date.now() - created) / (1000*60*60*24*30))) : 60;
+
+  // Sort by views for top 5
+  const topVideos = [...videos].sort((a,b) => b.views - a.views).slice(0, 5);
+
+  // Recent vs older momentum (last 10 vs prev 10)
+  const recent10 = videos.slice(0, 10);
+  const older10 = videos.slice(10, 20);
+  const avgRecent = recent10.length ? recent10.reduce((s,v) => s+v.views, 0)/recent10.length : 0;
+  const avgOlder = older10.length ? older10.reduce((s,v) => s+v.views, 0)/older10.length : avgRecent;
+  const momPct = avgOlder > 0 ? ((avgRecent - avgOlder) / avgOlder * 100) : 0;
+  const momentum = momPct > 10 ? 'rising' : momPct < -10 ? 'declining' : 'flat';
+
+  // Engagement rate: avg (likes+comments) / avg views * 100
+  const avgViews = videos.length ? videos.reduce((s,v) => s+v.views, 0)/videos.length : 0;
+  const avgLikes = videos.length ? videos.reduce((s,v) => s+v.likes, 0)/videos.length : 0;
+  const avgComments = videos.length ? videos.reduce((s,v) => s+v.comments, 0)/videos.length : 0;
+  const engRate = avgViews > 0 ? ((avgLikes + avgComments) / avgViews * 100) : 0;
+
+  // Upload frequency
+  const uploadFreq = totalVideos > 0 && ageMonths > 0 ? (totalVideos / ageMonths).toFixed(1) : '—';
+
+  // Topics from tags
+  const tagCounts = {};
+  videos.forEach(v => v.tags.forEach(t => { const k = t.toLowerCase(); tagCounts[k] = (tagCounts[k]||0)+1; }));
+  const topics = Object.entries(tagCounts).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([t])=>t).filter(t => t.length < 25);
+
+  // Creator Fit Score
+  let score = 0;
+  // Engagement quality (0-40): >5% = 40, >2% = 30, >1% = 20, >0.5% = 10
+  if (engRate > 5) score += 40;
+  else if (engRate > 2) score += 30;
+  else if (engRate > 1) score += 20;
+  else if (engRate > 0.5) score += 10;
+  // Posting consistency (0-30): >2/mo = 30, >1/mo = 20, >0.5/mo = 10
+  const freq = parseFloat(uploadFreq) || 0;
+  if (freq >= 2) score += 30;
+  else if (freq >= 1) score += 20;
+  else if (freq >= 0.5) score += 10;
+  // Channel establishment (0-20): >100k = 20, >10k = 15, >1k = 10
+  if (subs >= 100000) score += 20;
+  else if (subs >= 10000) score += 15;
+  else if (subs >= 1000) score += 10;
+  // Momentum bonus (0-10)
+  if (momentum === 'rising') score += 10;
+  else if (momentum === 'flat') score += 5;
+
+  score = Math.min(100, score);
+
+  const avatarUrl = snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url || '';
+  const momIcon = momentum === 'rising' ? '↑' : momentum === 'declining' ? '↓' : '→';
+  const momLabel = momentum === 'rising' ? 'Rising' : momentum === 'declining' ? 'Declining' : 'Flat';
+  const momPctStr = momPct > 0 ? '+' + momPct.toFixed(0) + '%' : momPct.toFixed(0) + '%';
+
+  const html = `
+    <div class="channel-header">
+      ${avatarUrl ? `<img class="channel-avatar" src="${avatarUrl}" alt="avatar"/>` : ''}
+      <div class="channel-info">
+        <h2>${snippet.title || 'Unknown Channel'}</h2>
+        <div class="handle">${snippet.customUrl || ''}</div>
+        <p>Created ${created ? created.toLocaleDateString('en-US',{month:'long',year:'numeric'}) : '—'} · ${snippet.country || 'Global'}</p>
+      </div>
+    </div>
+
+    <div class="pitch-strip">
+      <strong>ChannelFit</strong> — free YouTube creator vetting for brands &amp; agencies. Audience, engagement, momentum, and deal readiness. All public data, no login needed.
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">Subscribers</div>
+        <div class="stat-value accent" id="cnt-subs">0</div>
+        <div class="stat-sub">${stats.hiddenSubscriberCount ? 'Shown as approximate' : 'Public count'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Videos</div>
+        <div class="stat-value" id="cnt-vids">0</div>
+        <div class="stat-sub">${uploadFreq}/mo average</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg Views / Video</div>
+        <div class="stat-value" id="cnt-avgv">0</div>
+        <div class="stat-sub">Last ${videos.length} videos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Engagement Rate</div>
+        <div class="stat-value accent" id="cnt-eng">0%</div>
+        <div class="stat-sub">(Likes+Comments) ÷ Views</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg Likes</div>
+        <div class="stat-value" id="cnt-likes">0</div>
+        <div class="stat-sub">Per video</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg Comments</div>
+        <div class="stat-value" id="cnt-cmts">0</div>
+        <div class="stat-sub">Per video</div>
+      </div>
+    </div>
+
+    <div class="momentum-row">
+      <div class="momentum-card">
+        <div class="section-label">Momentum</div>
+        <div class="momentum-badge ${momentum}">${momIcon} ${momLabel}</div>
+        <div class="momentum-detail">
+          Recent 10 videos avg: <strong>${fmt(avgRecent)} views</strong><br/>
+          Previous 10 videos avg: <strong>${fmt(avgOlder)} views</strong><br/>
+          Change: <strong style="color:${momentum==='rising'?'var(--green)':momentum==='declining'?'var(--red)':'var(--yellow)'}">${momPctStr}</strong>
+        </div>
+      </div>
+      <div class="score-card">
+        <div class="section-label">Creator Fit Score</div>
+        <div class="score-gauge-wrap">
+          <div class="score-circle inner" style="--pct:${score * 3.6}deg;--accent-color:${scoreColor(score)};color:${scoreColor(score)}" id="score-el">0</div>
+          <div class="score-details">
+            <p style="color:${scoreColor(score)};font-weight:700;font-size:1rem;margin-bottom:6px">${scoreLabel(score)}</p>
+            <p>Based on engagement quality, posting consistency, channel size, and momentum.</p>
+          </div>
+        </div>
+        ${topics.length ? `
+        <div style="margin-top:16px">
+          <div class="section-label">Content Topics</div>
+          <div class="topics-wrap">${topics.map(t=>`<span class="topic-tag">${t}</span>`).join('')}</div>
+        </div>` : ''}
+      </div>
+    </div>
+
+    ${topVideos.length ? `
+    <div class="videos-section">
+      <div class="section-title">Top 5 Videos by Views</div>
+      ${topVideos.map((v,i) => `
+        <a class="video-card" href="${v.url}" target="_blank" rel="noopener">
+          <div class="video-rank">#${i+1}</div>
+          ${v.thumb ? `<img class="video-thumb" src="${v.thumb}" alt="" loading="lazy"/>` : ''}
+          <div class="video-info">
+            <div class="video-title">${v.title}</div>
+            <div class="video-meta">
+              <span class="views">${fmt(v.views)} views</span>
+              <span>♥ ${fmt(v.likes)}</span>
+              <span>${fmtDate(v.published)}</span>
+            </div>
+          </div>
+        </a>
+      `).join('')}
+    </div>` : ''}
+
+    ${videos.length >= 4 ? `
+    <div class="chart-section">
+      <div class="section-label">Performance Trend (Recent Videos)</div>
+      <div class="chart-bars" id="trend-chart"></div>
+    </div>` : ''}
+  `;
+
+  const resultsEl = document.getElementById('results');
+  resultsEl.innerHTML = html;
+  resultsEl.style.display = 'block';
+
+  // Animate counters
+  setTimeout(() => {
+    animateCount(document.getElementById('cnt-subs'), subs);
+    animateCount(document.getElementById('cnt-vids'), totalVideos);
+    animateCount(document.getElementById('cnt-avgv'), Math.round(avgViews));
+    animateCount(document.getElementById('cnt-likes'), Math.round(avgLikes));
+    animateCount(document.getElementById('cnt-cmts'), Math.round(avgComments));
+
+    // Engagement rate animate
+    const engEl = document.getElementById('cnt-eng');
+    let startEng = 0;
+    const engDur = 1200;
+    const engStep = ts => {
+      if (!startEng) startEng = ts;
+      const p = Math.min((ts-startEng)/engDur,1);
+      const e = 1-Math.pow(1-p,3);
+      engEl.textContent = (e*engRate).toFixed(2)+'%';
+      if (p<1) requestAnimationFrame(engStep);
+    };
+    requestAnimationFrame(engStep);
+
+    // Score animate
+    const scoreEl = document.getElementById('score-el');
+    if (scoreEl) {
+      let s0 = 0;
+      const ss = ts => {
+        if (!s0) s0 = ts;
+        const p = Math.min((ts-s0)/1000,1);
+        const e = 1-Math.pow(1-p,3);
+        scoreEl.textContent = Math.floor(e*score);
+        scoreEl.style.setProperty('--pct', (e*score*3.6)+'deg');
+        if (p<1) requestAnimationFrame(ss);
+      };
+      requestAnimationFrame(ss);
+    }
+
+    // Trend chart
+    const chartEl = document.getElementById('trend-chart');
+    if (chartEl && videos.length >= 4) {
+      const sample = videos.slice(0, 20).reverse();
+      const maxV = Math.max(...sample.map(v=>v.views), 1);
+      const midpoint = Math.floor(sample.length / 2);
+      chartEl.innerHTML = sample.map((v,i) => `
+        <div class="chart-bar-wrap">
+          <div class="chart-bar ${i >= midpoint ? 'recent' : 'older'}"
+               style="height:${Math.max(4, Math.round(v.views/maxV*80))}px"
+               title="${v.title.slice(0,40)}: ${fmt(v.views)} views"></div>
+          <div class="chart-label">${i+1}</div>
+        </div>
+      `).join('');
+    }
+  }, 100);
+}
+
+// Enter key support
+document.getElementById('channelInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') audit();
+});
+</script>
+</body>
+</html>
