@@ -35,7 +35,7 @@ When a brand wants to know "should we work with this creator?", they either pay 
    ```bash
    npm install
    ```
-2. Create a `.env` file with your own [YouTube Data API v3](https://console.cloud.google.com/apis/library/youtube.googleapis.com) key:
+2. Create a `.env` file with your own YouTube Data API v3 key (see [Getting a YouTube Data API key](#getting-a-youtube-data-api-key) below):
    ```
    YOUTUBE_API_KEY=your_key_here
    ```
@@ -43,6 +43,22 @@ When a brand wants to know "should we work with this creator?", they either pay 
    ```bash
    npx netlify dev
    ```
+
+### Getting a YouTube Data API key
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
+2. Create a new project (or select an existing one) from the project dropdown at the top.
+3. In the left sidebar, go to **APIs & Services → Library**, search for **YouTube Data API v3**, and click **Enable**.
+4. Go to **APIs & Services → Credentials**, click **Create Credentials → API key**.
+5. Copy the generated key.
+6. (Optional but recommended) Click **Restrict key** and limit it to the **YouTube Data API v3** so it can't be used for other Google APIs.
+7. In the project folder, create a file named `.env` (same folder as `package.json`) and add:
+   ```
+   YOUTUBE_API_KEY=your_key_here
+   ```
+   `.env` is already listed in `.gitignore`, so it won't be committed to git.
+
+The free tier includes 10,000 quota units/day, which is plenty for personal use and testing — each channel audit uses roughly 100-150 units.
 
 ## Deployment
 
