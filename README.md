@@ -53,3 +53,4 @@ This project deploys to Netlify. The `netlify.toml` config routes `/api/*` reque
 - **Cross-platform analytics** — pull in Snapchat, Instagram, and Facebook stats so brands can see a creator's full footprint, not just YouTube
 - **Brand recommendations** — suggest the types of brands/products that would fit well with a given channel based on its content and audience
 - **Niche matching** — identify the creator's niche and recommend a few other channels in the same space, useful for finding alternatives or building a creator shortlist
+- **Niche benchmarking** — compare a channel's stats (subscribers, engagement, views) against others in the same niche to show how they stack up relative to peers
