@@ -47,3 +47,9 @@ When a brand wants to know "should we work with this creator?", they either pay 
 ## Deployment
 
 This project deploys to Netlify. The `netlify.toml` config routes `/api/*` requests to the serverless functions in `netlify/functions/`. Set `YOUTUBE_API_KEY` as an environment variable in your Netlify site settings before deploying.
+
+## Roadmap / Potential Upcoming Updates
+
+- **Cross-platform analytics** — pull in Snapchat, Instagram, and Facebook stats so brands can see a creator's full footprint, not just YouTube
+- **Brand recommendations** — suggest the types of brands/products that would fit well with a given channel based on its content and audience
+- **Niche matching** — identify the creator's niche and recommend a few other channels in the same space, useful for finding alternatives or building a creator shortlist
